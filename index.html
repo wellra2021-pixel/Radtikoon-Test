@@ -23,7 +23,6 @@
             margin-bottom: 20px;
         }
 
-        /* จัดตารางแผ่นป้าย */
         .grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
@@ -32,7 +31,6 @@
             margin: 0 auto;
         }
 
-        /* ตัวการ์ด 3D */
         .card {
             background-color: transparent;
             width: 100%;
@@ -56,7 +54,6 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        /* แอคชันพลิกป้าย */
         .card.flipped .card-inner {
             transform: rotateY(180deg);
         }
@@ -74,10 +71,12 @@
             overflow: hidden;
         }
 
-        /* ด้านหน้าป้าย (รูปภาพ) */
         .card-front {
-            background-color: #fff;
-            border: 2px solid #ddd;
+            background-color: #e8f0fe;
+            border: 2px solid #ccc;
+            font-size: 14px;
+            color: #555;
+            font-weight: bold;
         }
 
         .card-front img {
@@ -86,7 +85,6 @@
             object-fit: cover;
         }
 
-        /* ด้านหลังป้าย (ตัวเลขสุ่ม 1-155) */
         .card-back {
             background: linear-gradient(135deg, #ff4e50, #f9d423);
             color: white;
@@ -108,35 +106,14 @@
         const TOTAL_CARDS = 155;
         let shuffledNumbers = [];
 
-        // =========================================================================
-        //  วางชื่อไฟล์รูปภาพหรือลิงก์รูปภาพ 155 รูปของคุณในอาร์เรย์ด้านล่างนี้
-        // =========================================================================
-        const customImages = [
-            // "images/1.jpg", "images/2.jpg", ...
-        ];
-
-        function getImageUrl(index) {
-            if (customImages[index] && customImages[index] !== "") {
-                return customImages[index];
-            }
-            return `images/${index + 1}.jpg`;
-        }
-
-        // =========================================================================
-        //  ระบบสุ่มตัวเลข 1-155 ไม่ให้ซ้ำกัน (Fisher-Yates Shuffle Algorithm)
-        // =========================================================================
         function generateShuffledNumbers() {
             shuffledNumbers = Array.from({length: TOTAL_CARDS}, (_, i) => i + 1);
-            
             for (let i = shuffledNumbers.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [shuffledNumbers[i], shuffledNumbers[j]] = [shuffledNumbers[j], shuffledNumbers[i]];
             }
         }
 
-        // =========================================================================
-        //  ระบบสร้างเสียงเอฟเฟกต์ (Web Audio API)
-        // =========================================================================
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
 
@@ -165,20 +142,17 @@
             osc.stop(audioCtx.currentTime + 0.08);
         }
 
-        // =========================================================================
-        //  สร้างกระดานแผ่นป้าย
-        // =========================================================================
         function createBoard() {
             const container = document.getElementById('gridContainer');
             container.innerHTML = '';
 
             for (let i = 0; i < TOTAL_CARDS; i++) {
-                const randomNumber = shuffledNumbers[i]; // ตัวเลขสุ่มประจำป้ายนี้
+                const cardIndex = i + 1;
+                const randomNumber = shuffledNumbers[i];
 
                 const card = document.createElement('div');
                 card.className = 'card';
 
-                // คลิกเปิดป้าย และล็อกห้ามเปิดซ้ำ
                 card.onclick = function() {
                     if (!card.classList.contains('flipped')) {
                         playFlipSound();
@@ -189,19 +163,29 @@
                 const cardInner = document.createElement('div');
                 cardInner.className = 'card-inner';
 
-                // หน้าป้าย (รูปภาพ)
                 const cardFront = document.createElement('div');
                 cardFront.className = 'card-front';
-                const img = document.createElement('img');
-                img.src = getImageUrl(i);
-                img.alt = `Photo ${i + 1}`;
                 
+                const img = document.createElement('img');
+                
+                img.src = `${cardIndex}.jpg`;
+                img.alt = `Photo ${cardIndex}`;
+
+                let attempts = 0;
+                const extensions = ['.JPG', '.jpeg', '.png', '.PNG'];
+
                 img.onerror = function() {
-                    this.src = `https://picsum.photos/id/${(i % 50) + 10}/200/200`;
+                    if (attempts < extensions.length) {
+                        this.src = `${cardIndex}${extensions[attempts]}`;
+                        attempts++;
+                    } else {
+                        this.style.display = 'none';
+                        cardFront.innerText = `รูปที่ ${cardIndex}`;
+                    }
                 };
+
                 cardFront.appendChild(img);
 
-                // หลังป้าย (ตัวเลขสุ่ม 1-155)
                 const cardBack = document.createElement('div');
                 cardBack.className = 'card-back';
                 cardBack.innerText = randomNumber;
@@ -213,7 +197,6 @@
             }
         }
 
-        // เริ่มต้นเกมเมื่อเปิดหน้าเว็บ
         generateShuffledNumbers();
         createBoard();
     </script>
